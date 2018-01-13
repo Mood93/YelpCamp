@@ -1,20 +1,29 @@
 var app = require("express")();
 var bodyParser = require("body-parser");
+var mongoose = require("mongoose");
 
+mongoose.connect("mongodb://localhost/yelp_camp");
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 
-var campgrounds = [
-    {name: "McFadden Cove", image: "https://farm9.staticflickr.com/8167/7121865553_e1c6a31f07.jpg"},
-    {name: "Coon Creek", image: "https://farm4.staticflickr.com/3742/10759552364_a796a5560a.jpg"},
-    {name: "Washunga Bay", image: "https://farm3.staticflickr.com/2931/14128269785_f27fb630f3.jpg"},{name: "McFadden Cove", image: "https://farm9.staticflickr.com/8167/7121865553_e1c6a31f07.jpg"},
-    {name: "Coon Creek", image: "https://farm4.staticflickr.com/3742/10759552364_a796a5560a.jpg"},
-    {name: "Washunga Bay", image: "https://farm3.staticflickr.com/2931/14128269785_f27fb630f3.jpg"},    {name: "McFadden Cove", image: "https://farm9.staticflickr.com/8167/7121865553_e1c6a31f07.jpg"},
-    {name: "Coon Creek", image: "https://farm4.staticflickr.com/3742/10759552364_a796a5560a.jpg"},
-    {name: "Washunga Bay", image: "https://farm3.staticflickr.com/2931/14128269785_f27fb630f3.jpg"},{name: "McFadden Cove", image: "https://farm9.staticflickr.com/8167/7121865553_e1c6a31f07.jpg"},
-    {name: "Coon Creek", image: "https://farm4.staticflickr.com/3742/10759552364_a796a5560a.jpg"},
-    {name: "Washunga Bay", image: "https://farm3.staticflickr.com/2931/14128269785_f27fb630f3.jpg"}
-]
+//SCHEMA
+var campgroundSchema = new mongoose.Schema( {
+    name: String,
+    image: String
+});
+
+var Campground = mongoose.model("Campground", campgroundSchema);
+
+//Campground.create( {
+//    name: "Coon Creek", 
+//    image: "https://farm4.staticflickr.com/3742/10759552364_a796a5560a.jpg"
+//
+//    }, function(err, campground) {
+//        
+//        err ? console.log(err) : console.log("NEWLY CREATED CAMPGROUND: " + campground);
+//        
+//    }
+//);
 
 //root GET
 app.get("/", function (req, res) {
@@ -24,8 +33,9 @@ app.get("/", function (req, res) {
 
 //campgrounds GET
 app.get("/campgrounds", function (req, res) {
-    
-    res.render("campgrounds", {campgrounds: campgrounds});
+    Campground.find({}, function(err, campgrounds) {
+        err ? console.log(err) : res.render("campgrounds", {campgrounds: campgrounds});
+    });
 });
 
 //campgrounds POST
@@ -35,8 +45,10 @@ app.post("/campgrounds", function(req, res) {
     var image = req.body.image;
     var newCampground = {name: name, image: image};
     
-    campgrounds.push(newCampground);
-    res.redirect("/campgrounds");
+    //create new campground and save to DB
+    Campground.create(newCampground, function(err, newCampground){
+        err ? console.log(err) : res.redirect("/campgrounds");
+    })
 });
 
 //campgrounds/new GET
